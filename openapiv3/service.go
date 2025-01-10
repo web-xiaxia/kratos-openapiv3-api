@@ -109,7 +109,7 @@ func (s *Service) GetServiceGroupOpenAPI(ctx context.Context, name string) (stri
 	for _, ss := range servicesReply.Services {
 		if strings.HasPrefix(ss, name) {
 			services, err := s.ser.GetServiceDesc(nil, &metadata.GetServiceDescRequest{
-				Name: name,
+				Name: ss,
 			})
 			if err != nil {
 				return "", err

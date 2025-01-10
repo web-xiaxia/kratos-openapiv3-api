@@ -106,10 +106,10 @@ func (s *Service) GetServiceGroupOpenAPI(ctx context.Context, name string) (stri
 
 	files := make([]*dpb.FileDescriptorProto, 0)
 	xx := mapset.NewSet[string]()
-	for _, ss := range servicesReply.Services {
-		if strings.HasPrefix(ss, name) {
+	for _, sName := range servicesReply.Services {
+		if strings.HasPrefix(sName, name) {
 			services, err := s.ser.GetServiceDesc(nil, &metadata.GetServiceDescRequest{
-				Name: ss,
+				Name: sName,
 			})
 			if err != nil {
 				return "", err

@@ -10,8 +10,8 @@ import (
 	"github.com/go-kratos/kratos/v2/transport/http/binding"
 )
 
-func NewHandler() http.Handler {
-	service := New(nil)
+func NewHandler(opts ...Option) http.Handler {
+	service := New(opts...)
 	r := mux.NewRouter()
 
 	r.HandleFunc("/q/services", func(w http.ResponseWriter, r *http.Request) {

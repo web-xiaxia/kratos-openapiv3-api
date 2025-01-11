@@ -2,29 +2,49 @@ package openapiv3
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	mapset "github.com/deckarep/golang-set/v2"
 	"google.golang.org/protobuf/compiler/protogen"
 	"strings"
 
 	"github.com/go-kratos/kratos/v2/api/metadata"
-	"google.golang.org/grpc"
 	dpb "google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
 
 	"github.com/google/gnostic/cmd/protoc-gen-openapi/generator"
 )
 
+func ToPtr[T any](x T) *T {
+	return &x
+}
+
 // Service is service
 type Service struct {
-	ser *metadata.Server
+	ser  *metadata.Server
+	conf *generator.Configuration
 }
 
 // New service
-func New(srv *grpc.Server) *Service {
+func New(opts ...Option) *Service {
+	o := &options{}
+	for _, opt := range opts {
+		opt(o)
+	}
+	conf := &generator.Configuration{
+		// Version:         (*)"0.0.1",
+		Title:           ToPtr(""),
+		Description:     ToPtr(""),
+		Naming:          ToPtr("json"),
+		FQSchemaNaming:  ToPtr(false),
+		EnumType:        ToPtr("integer"),
+		CircularDepth:   ToPtr(2),
+		DefaultResponse: ToPtr(false),
+		OutputMode:      ToPtr("merged"),
+	}
+	o.conf(conf)
 	return &Service{
-		ser: metadata.NewServer(srv),
+		ser:  metadata.NewServer(nil),
+		conf: conf,
 	}
 }
 
@@ -68,18 +88,6 @@ func (s *Service) generated(files []*dpb.FileDescriptorProto, target []string) (
 	if err != nil {
 		return "", err
 	}
-	var flags flag.FlagSet
-	conf := generator.Configuration{
-		Version:         flags.String("version", "0.0.1", "version number text, e.g. 1.2.3"),
-		Title:           flags.String("title", "", "name of the API"),
-		Description:     flags.String("description", "", "description of the API"),
-		Naming:          flags.String("naming", "json", `naming convention. Use "proto" for passing names directly from the proto files`),
-		FQSchemaNaming:  flags.Bool("fq_schema_naming", false, `schema naming convention. If "true", generates fully-qualified schema names by prefixing them with the proto message package name`),
-		EnumType:        flags.String("enum_type", "integer", `type for enum serialization. Use "string" for string-based serialization`),
-		CircularDepth:   flags.Int("depth", 2, "depth of recursion for circular messages"),
-		DefaultResponse: flags.Bool("default_response", true, `add default response. If "true", automatically adds a default response to operations which use the google.rpc.Status message. Useful if you use envoy or grpc-gateway to transcode as they use this type for their default error responses.`),
-		OutputMode:      flags.String("output_mode", "merged", `output generation mode. By default, a single openapi.yaml is generated at the out folder. Use "source_relative' to generate a separate '[inputfile].openapi.yaml' next to each '[inputfile].proto'.`),
-	}
 
 	targetSet := mapset.NewSet[string](target...)
 	for _, ff := range plugin.Files {
@@ -95,7 +103,7 @@ func (s *Service) generated(files []*dpb.FileDescriptorProto, target []string) (
 		}
 	}
 
-	iv3Generator := generator.NewOpenAPIv3Generator(plugin, conf, plugin.Files)
+	iv3Generator := generator.NewOpenAPIv3Generator(plugin, *s.conf, plugin.Files)
 
 	outputFile := plugin.NewGeneratedFile("", "")
 	outputFile.Skip()

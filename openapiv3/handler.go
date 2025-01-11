@@ -46,7 +46,7 @@ func NewHandler() http.Handler {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/yaml")
+		w.Header().Set("Content-Type", "application/text")
 		w.WriteHeader(200)
 		w.Write([]byte(content))
 	}).Methods("GET")

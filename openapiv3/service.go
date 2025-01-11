@@ -3,6 +3,7 @@ package openapiv3
 import (
 	"context"
 	"flag"
+	"fmt"
 	mapset "github.com/deckarep/golang-set/v2"
 	"google.golang.org/protobuf/compiler/protogen"
 	"strings"
@@ -78,6 +79,20 @@ func (s *Service) generated(files []*dpb.FileDescriptorProto, target []string) (
 		CircularDepth:   flags.Int("depth", 2, "depth of recursion for circular messages"),
 		DefaultResponse: flags.Bool("default_response", true, `add default response. If "true", automatically adds a default response to operations which use the google.rpc.Status message. Useful if you use envoy or grpc-gateway to transcode as they use this type for their default error responses.`),
 		OutputMode:      flags.String("output_mode", "merged", `output generation mode. By default, a single openapi.yaml is generated at the out folder. Use "source_relative' to generate a separate '[inputfile].openapi.yaml' next to each '[inputfile].proto'.`),
+	}
+
+	targetSet := mapset.NewSet[string](target...)
+	for _, ff := range plugin.Files {
+		packageArr := strings.Split(*ff.Proto.Package, ".")
+		packageName := strings.ToLower(packageArr[len(packageArr)-1])
+		if !targetSet.ContainsOne(*ff.Proto.Name) {
+			continue
+		}
+		for _, ss := range ff.Services {
+			if strings.ToLower(ss.GoName) != packageName {
+				ss.GoName = fmt.Sprintf("%s.%s", packageName, ss.GoName)
+			}
+		}
 	}
 
 	iv3Generator := generator.NewOpenAPIv3Generator(plugin, conf, plugin.Files)

@@ -51,16 +51,13 @@ func (s *Service) GetServiceOpenAPI(_ context.Context, name string) (string, err
 		xx.Add(*ff.Name)
 		files = append(files, ff)
 	}
-
-	return s.xxx(files)
+	return s.generated(files, []string{*files[len(files)-1].Name})
 }
 
-func (s *Service) xxx(files []*dpb.FileDescriptorProto) (string, error) {
-	var target string
-	target = *files[len(files)-1].Name
+func (s *Service) generated(files []*dpb.FileDescriptorProto, target []string) (string, error) {
 
 	req := new(pluginpb.CodeGeneratorRequest)
-	req.FileToGenerate = []string{target}
+	req.FileToGenerate = target
 	var para = ""
 	req.Parameter = &para
 	req.ProtoFile = files
@@ -106,6 +103,7 @@ func (s *Service) GetServiceGroupOpenAPI(ctx context.Context, name string) (stri
 
 	files := make([]*dpb.FileDescriptorProto, 0)
 	xx := mapset.NewSet[string]()
+	target := make([]string, 0)
 	for _, sName := range servicesReply.Services {
 		if strings.HasPrefix(sName, name) {
 			services, err := s.ser.GetServiceDesc(nil, &metadata.GetServiceDescRequest{
@@ -123,9 +121,9 @@ func (s *Service) GetServiceGroupOpenAPI(ctx context.Context, name string) (stri
 				xx.Add(*ff.Name)
 				files = append(files, ff)
 			}
-
+			target = append(target, *files[len(files)-1].Name)
 		}
 	}
 
-	return s.xxx(files)
+	return s.generated(files, target)
 }

@@ -26,7 +26,11 @@ type Service struct {
 
 // New service
 func New(opts ...Option) *Service {
-	o := &options{}
+	o := &options{
+		conf: func(c *generator.Configuration) {
+
+		},
+	}
 	for _, opt := range opts {
 		opt(o)
 	}

@@ -35,7 +35,7 @@ func New(opts ...Option) *Service {
 		opt(o)
 	}
 	conf := &generator.Configuration{
-		// Version:         (*)"0.0.1",
+		Version:         ToPtr("1.0.0"),
 		Title:           ToPtr(""),
 		Description:     ToPtr(""),
 		Naming:          ToPtr("json"),

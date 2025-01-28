@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-在项目中引入openapiv2
+在项目中引入openapiv3
 
 ```go
 import	openapiHandler github.com/web-xiaxia/kratos-openapiv3-api
